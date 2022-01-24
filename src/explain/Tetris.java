@@ -16,8 +16,8 @@ class MyComponents{
     int width = 12; //gameArr 의 가로길이
     int height = 21; //gameArr 의 세로길이
 
-    int x = 5;
-    int y = 0;
+    public int x = 5;
+    public int y = 0;
     int blockNum = 0;
     int blockParent = 0;
 
@@ -118,6 +118,7 @@ class MyComponents{
 
         return false;
     }
+
 
     int[][][] blocks = {
             //■
@@ -312,8 +313,6 @@ class MyComponents{
                     {0,0,0,0}
             }
     };
-
-
 }
 
 class MyPanel extends JPanel implements Runnable, KeyListener { //JPanel 상속
@@ -336,26 +335,52 @@ class MyPanel extends JPanel implements Runnable, KeyListener { //JPanel 상속
 
     @Override
     public void run() {
-        com.getRandomBlockNum();
-        while (true) {
-            try {
-                com.drawBlock(com.blockNum, com.x, com.y);
-                repaint();
-                Thread.sleep(300);
-                com.deleteBlock(com.blockNum, com.x, com.y);
-                repaint();
-                if(com.detectCollision(com.blockNum, com.x, com.y)){
+        while(true) {
+            com.getRandomBlockNum();
+            com.initPosition();
+            com.drawBlock(com.blockNum, com.x, com.y);
+            while (true) {
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                moveDown(com.blockNum);
+                System.out.println(com.x + " : " + com.y);
+                if (com.detectCollision(com.blockNum, com.x, com.y+1)) {
                     com.fixBlock(com.blockNum, com.x, com.y);
                     break;
-                }else
-                    com.y++;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                }
             }
-            repaint(); //paintComponents() 함수를 재호출
         }
-
-
+    }
+    public void moveDown(int blockNum){
+        if(!com.detectCollision(blockNum, com.x, com.y+1)){
+            com.deleteBlock(blockNum, com.x, com.y);
+            com.y++;
+            com.drawBlock(blockNum, com.x, com.y);
+            repaint();
+        }
+    }
+    public void moveRight(int blockNum){
+        System.out.println("move right func start");
+        if(!com.detectCollision(blockNum, com.x+1, com.y)){
+            com.deleteBlock(blockNum, com.x, com.y);
+            com.x++;
+            com.drawBlock(blockNum, com.x, com.y);
+            repaint();
+            System.out.println("move right");
+        }
+    }
+    public void moveLeft(int blockNum){
+        System.out.println("move left func start");
+        if(!com.detectCollision(blockNum, com.x-1, com.y)){
+            com.deleteBlock(blockNum, com.x, com.y);
+            com.x--;
+            com.drawBlock(blockNum, com.x, com.y);
+            repaint();
+            System.out.println("move left");
+        }
     }
 
     @Override
@@ -370,10 +395,10 @@ class MyPanel extends JPanel implements Runnable, KeyListener { //JPanel 상속
            case KeyEvent.VK_UP:
                break;
            case KeyEvent.VK_LEFT:
-               com.x--;
+               moveLeft(com.blockNum);
                break;
            case KeyEvent.VK_RIGHT:
-               com.x++;
+               moveRight(com.blockNum);
                break;
            default:
                break;
