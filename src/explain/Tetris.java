@@ -20,6 +20,7 @@ class MyComponents{
     public int y = 0;
     int blockNum = 0;
     int blockParent = 0;
+    int score = 0;
 
     MyComponents(){
         drawFrame();
@@ -30,8 +31,8 @@ class MyComponents{
         y = 0;
     }
     public void getRandomBlockNum(){
-        blockNum = (int)(Math.random()*24);
-        blockParent = blockNum - blockNum%6;
+        blockNum = (int)(Math.random()*28);
+        blockParent = blockNum - blockNum%4;
     }
 
     //gameArr 배열을 JPanel 에 그리는 함수
@@ -117,6 +118,21 @@ class MyComponents{
         }
 
         return false;
+    }
+    public boolean detectCompleteLine(int y){
+        int cnt = 0;
+        for(int i=1; i<width-1; i++){
+            if(gameArr[y][i] == 1)
+                cnt++;
+        }
+        return cnt == width - 2;
+    }
+    public void deleteBlockLine(int y){
+        if(!detectCompleteLine(y))
+            return;
+        for(int i=y; i>0; i--){
+            gameArr[i] = gameArr[i-1].clone();
+        }
     }
 
 
@@ -349,11 +365,16 @@ class MyPanel extends JPanel implements Runnable, KeyListener { //JPanel 상속
                 System.out.println(com.x + " : " + com.y);
                 if (com.detectCollision(com.blockNum, com.x, com.y+1)) {
                     com.fixBlock(com.blockNum, com.x, com.y);
+                    for(int i=0; i<com.height-2; i++){
+                        com.deleteBlockLine(i);
+                    }
                     break;
                 }
             }
         }
     }
+
+
     public void moveDown(int blockNum){
         if(!com.detectCollision(blockNum, com.x, com.y+1)){
             com.deleteBlock(blockNum, com.x, com.y);
@@ -382,6 +403,23 @@ class MyPanel extends JPanel implements Runnable, KeyListener { //JPanel 상속
             System.out.println("move left");
         }
     }
+    public void dropToBottom(){
+        while(!com.detectCollision(com.blockNum, com.x, com.y))
+            moveDown(com.blockNum);
+    }
+    public void rotateClockwise(){
+        com.deleteBlock(com.blockNum, com.x, com.y);
+        com.blockNum = com.blockParent + (com.blockNum+1)%4;
+        com.drawBlock(com.blockNum, com.x, com.y);
+        repaint();
+    }
+    public void rotateCounterClockwise(){
+        com.deleteBlock(com.blockNum, com.x, com.y);
+       for(int i=0; i<3; i++)
+           com.blockNum = com.blockParent + (com.blockNum+1)%4;
+       com.drawBlock(com.blockNum, com.x, com.y);
+       repaint();
+    }
 
     @Override
     public void keyTyped(KeyEvent e) { }
@@ -390,15 +428,19 @@ class MyPanel extends JPanel implements Runnable, KeyListener { //JPanel 상속
     public void keyPressed(KeyEvent e) {
        switch(e.getKeyCode()){
            case KeyEvent.VK_DOWN:
-               System.out.println("down");
+               rotateCounterClockwise();
                break;
            case KeyEvent.VK_UP:
+               rotateClockwise();
                break;
            case KeyEvent.VK_LEFT:
                moveLeft(com.blockNum);
                break;
            case KeyEvent.VK_RIGHT:
                moveRight(com.blockNum);
+               break;
+           case KeyEvent.VK_SPACE:
+               dropToBottom();
                break;
            default:
                break;
